@@ -25,37 +25,63 @@ public interface ParserConstants {
   /** RegularExpression Id. */
   int ASSIGN = 13;
   /** RegularExpression Id. */
-  int LPAREN = 14;
+  int EQUAL = 14;
   /** RegularExpression Id. */
-  int RPAREN = 15;
+  int NOT_EQUAL = 15;
   /** RegularExpression Id. */
-  int LCURLY = 16;
+  int GT = 16;
   /** RegularExpression Id. */
-  int RCURLY = 17;
+  int GE = 17;
   /** RegularExpression Id. */
-  int LBRACK = 18;
+  int LT = 18;
   /** RegularExpression Id. */
-  int RBRACK = 19;
+  int LE = 19;
   /** RegularExpression Id. */
-  int SEMI = 20;
+  int STAR = 20;
   /** RegularExpression Id. */
-  int COMMA = 21;
+  int DIV = 21;
   /** RegularExpression Id. */
-  int DOT = 22;
+  int PLUS = 22;
   /** RegularExpression Id. */
-  int IDENTIFIER = 23;
+  int MINUS = 23;
   /** RegularExpression Id. */
-  int LETTER = 24;
+  int LOR = 24;
   /** RegularExpression Id. */
-  int DIGIT = 25;
+  int LAND = 25;
   /** RegularExpression Id. */
-  int NON_ZERO_DIGIT = 26;
+  int LPAREN = 26;
   /** RegularExpression Id. */
-  int INT_LITERAL = 27;
+  int RPAREN = 27;
   /** RegularExpression Id. */
-  int STRING_LITERAL = 28;
+  int LCURLY = 28;
   /** RegularExpression Id. */
-  int ESC = 29;
+  int RCURLY = 29;
+  /** RegularExpression Id. */
+  int LBRACK = 30;
+  /** RegularExpression Id. */
+  int RBRACK = 31;
+  /** RegularExpression Id. */
+  int SEMI = 32;
+  /** RegularExpression Id. */
+  int COMMA = 33;
+  /** RegularExpression Id. */
+  int DOT = 34;
+  /** RegularExpression Id. */
+  int IDENTIFIER = 35;
+  /** RegularExpression Id. */
+  int LETTER = 36;
+  /** RegularExpression Id. */
+  int DIGIT = 37;
+  /** RegularExpression Id. */
+  int NON_ZERO_DIGIT = 38;
+  /** RegularExpression Id. */
+  int INT_LITERAL = 39;
+  /** RegularExpression Id. */
+  int STRING_LITERAL = 40;
+  /** RegularExpression Id. */
+  int ESC = 41;
+  /** RegularExpression Id. */
+  int ERROR = 42;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -76,6 +102,18 @@ public interface ParserConstants {
     "\"else\"",
     "\"while\"",
     "\"=\"",
+    "\"==\"",
+    "\"!=\"",
+    "\">\"",
+    "\">=\"",
+    "\"<\"",
+    "\"<=\"",
+    "\"*\"",
+    "\"/\"",
+    "\"+\"",
+    "\"-\"",
+    "\"||\"",
+    "\"&&\"",
     "\"(\"",
     "\")\"",
     "\"{\"",
@@ -92,6 +130,7 @@ public interface ParserConstants {
     "<INT_LITERAL>",
     "<STRING_LITERAL>",
     "<ESC>",
+    "<ERROR>",
   };
 
 }

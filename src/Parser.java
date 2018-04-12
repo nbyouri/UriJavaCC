@@ -15,15 +15,6 @@ public class Parser implements ParserConstants {
         }
     }
 
-// For anything else, we return an ERROR token. Without this
-// definition the TokenManager will throw an Error when a lexical
-// error occurs, making it impossible to recover from it. So we
-// define this ERROR token.
-//TOKEN:
-//{
-// < ERROR: ~[] >
-//}
-
 /////////////////////////////////////////////////////////
 //       The uri syntactic grammar starts here         //
 /////////////////////////////////////////////////////////
@@ -276,10 +267,291 @@ public class Parser implements ParserConstants {
   }
 
 // Parse an expression
+//  expression ::= assignmentExpression
+  static final public Node expression() throws ParseException {
+    Node expr = null; String id = null; ArrayList<String> args = null;
+    try {
+      expr = assignmentExpression();
+    } catch (ParseException e) {
+        System.out.println("Failed to parse an expression");
+        e.printStackTrace();
+    }
+      {if (true) return expr;}
+    throw new Error("Missing return statement in function");
+  }
+
+// Parse an assignment expression.
+//      assignmentExpression ::= conditionalOrExpression  // level 13
+//                               [(ASSIGN) assignmentExpression]
+  static final public Node assignmentExpression() throws ParseException {
+    Node lhs = null, rhs = null;
+    try {
+      lhs = conditionalOrExpression();
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case ASSIGN:
+        jj_consume_token(ASSIGN);
+        rhs = assignmentExpression();
+              lhs = new Variable(lhs.toString(), rhs.toString());
+        break;
+      default:
+        jj_la1[8] = jj_gen;
+        ;
+      }
+    } catch (ParseException e) {
+        System.out.println("Failed to parse assignmentExpression");
+        e.printStackTrace();
+    }
+      {if (true) return lhs;}
+    throw new Error("Missing return statement in function");
+  }
+
+// Parse a conditional-or expression.
+//      conditionalOrExpression ::= conditionalAndExpression // level 11
+//                                  {LOR conditionalAndExpression}
+  static final public Node conditionalOrExpression() throws ParseException {
+    Node lhs = null, rhs = null;
+    try {
+      lhs = conditionalAndExpression();
+      label_4:
+      while (true) {
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case LOR:
+          ;
+          break;
+        default:
+          jj_la1[9] = jj_gen;
+          break label_4;
+        }
+        jj_consume_token(LOR);
+        rhs = conditionalAndExpression();
+              lhs = new BinaryExpression(lhs, rhs, tokenImage[LOR]);
+      }
+    } catch (ParseException e) {
+        System.out.println("Failed to parse conditionalOrExpression");
+        e.printStackTrace();
+    }
+      {if (true) return lhs;}
+    throw new Error("Missing return statement in function");
+  }
+
+// Parse a conditional-and expression.
+// conditionalAndExpression ::= inclusiveOrExpression // level 10
+//                              {LAND inclusiveOrExpression}
+  static final public Node conditionalAndExpression() throws ParseException {
+    Node lhs = null, rhs = null;
+    try {
+      lhs = equalityExpression();
+      label_5:
+      while (true) {
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case LAND:
+          ;
+          break;
+        default:
+          jj_la1[10] = jj_gen;
+          break label_5;
+        }
+        jj_consume_token(LAND);
+        rhs = equalityExpression();
+              lhs = new BinaryExpression(lhs, rhs, tokenImage[LAND]);
+      }
+    } catch (ParseException e) {
+        System.out.println("Failed to parse conditionalAndExpression");
+        e.printStackTrace();
+    }
+      {if (true) return lhs;}
+    throw new Error("Missing return statement in function");
+  }
+
+// Parse an equality expression.
+//  equalityExpression ::= relationalExpression  // level 6
+//                          {(EQUAL|NOT_EQUAL) relationalExpression}
+  static final public Node equalityExpression() throws ParseException {
+    Node lhs = null, rhs = null;
+    String op = null;
+    try {
+      lhs = relationalExpression();
+      label_6:
+      while (true) {
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case EQUAL:
+        case NOT_EQUAL:
+          ;
+          break;
+        default:
+          jj_la1[11] = jj_gen;
+          break label_6;
+        }
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case EQUAL:
+          jj_consume_token(EQUAL);
+          rhs = relationalExpression();
+              lhs = new BinaryExpression(lhs, rhs, tokenImage[EQUAL]);
+          break;
+        case NOT_EQUAL:
+          jj_consume_token(NOT_EQUAL);
+          rhs = relationalExpression();
+              lhs = new BinaryExpression(lhs, rhs, tokenImage[NOT_EQUAL]);
+          break;
+        default:
+          jj_la1[12] = jj_gen;
+          jj_consume_token(-1);
+          throw new ParseException();
+        }
+      }
+    } catch (ParseException e) {
+        System.out.println("Failed to parse equalityExpression");
+        e.printStackTrace();
+    }
+      {if (true) return lhs;}
+    throw new Error("Missing return statement in function");
+  }
+
+// Parse a relational expression.
+//
+//   relationalExpression ::= primary  // level 5
+//                          [ (GT | LT | GE | LE) primary
+  static final public Node relationalExpression() throws ParseException {
+    Node lhs = null, rhs = null;
+    String op = null;
+    try {
+      lhs = additiveExpression();
+      switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+      case GT:
+      case GE:
+      case LT:
+      case LE:
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case GT:
+          jj_consume_token(GT);
+          rhs = additiveExpression();
+              lhs = new BinaryExpression(lhs, rhs, tokenImage[GT]);
+          break;
+        case LT:
+          jj_consume_token(LT);
+          rhs = additiveExpression();
+              lhs = new BinaryExpression(lhs, rhs, tokenImage[LT]);
+          break;
+        case GE:
+          jj_consume_token(GE);
+          rhs = additiveExpression();
+              lhs = new BinaryExpression(lhs, rhs, tokenImage[GE]);
+          break;
+        case LE:
+          jj_consume_token(LE);
+          rhs = additiveExpression();
+              lhs = new BinaryExpression(lhs, rhs, tokenImage[LE]);
+          break;
+        default:
+          jj_la1[13] = jj_gen;
+          jj_consume_token(-1);
+          throw new ParseException();
+        }
+        break;
+      default:
+        jj_la1[14] = jj_gen;
+        ;
+      }
+    } catch (ParseException e) {
+        System.out.println("Failed to parse relationalExpression");
+        e.printStackTrace();
+    }
+      {if (true) return lhs;}
+    throw new Error("Missing return statement in function");
+  }
+
+// Parse an additive expression.
+//      additiveExpression ::= multiplicativeExpression // level 3
+//                          {(PLUS|MINUS) multiplicativeExpression}
+  static final public Node additiveExpression() throws ParseException {
+    Node lhs = null, rhs = null;
+    try {
+      lhs = multiplicativeExpression();
+      label_7:
+      while (true) {
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case PLUS:
+        case MINUS:
+          ;
+          break;
+        default:
+          jj_la1[15] = jj_gen;
+          break label_7;
+        }
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case PLUS:
+          jj_consume_token(PLUS);
+          rhs = multiplicativeExpression();
+              lhs = new BinaryExpression(lhs, rhs, tokenImage[PLUS]);
+          break;
+        case MINUS:
+          jj_consume_token(MINUS);
+          rhs = multiplicativeExpression();
+              lhs = new BinaryExpression(lhs, rhs, tokenImage[MINUS]);
+          break;
+        default:
+          jj_la1[16] = jj_gen;
+          jj_consume_token(-1);
+          throw new ParseException();
+        }
+      }
+    } catch (ParseException e) {
+        System.out.println("Failed to parse additiveExpression");
+        e.printStackTrace();
+    }
+      {if (true) return lhs;}
+    throw new Error("Missing return statement in function");
+  }
+
+// Parse a multiplicative expression.
+//  multiplicativeExpression ::= unaryExpression  // level 2
+//                              {(STAR|DIV) unaryExpression}
+  static final public Node multiplicativeExpression() throws ParseException {
+    int line = 0;
+    Node lhs = null, rhs = null;
+    try {
+      lhs = primary();
+      label_8:
+      while (true) {
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case STAR:
+        case DIV:
+          ;
+          break;
+        default:
+          jj_la1[17] = jj_gen;
+          break label_8;
+        }
+        switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+        case STAR:
+          jj_consume_token(STAR);
+          rhs = primary();
+              lhs = new BinaryExpression(lhs, rhs, tokenImage[STAR]);
+          break;
+        case DIV:
+          jj_consume_token(DIV);
+          rhs = primary();
+              lhs = new BinaryExpression(lhs, rhs, tokenImage[DIV]);
+          break;
+        default:
+          jj_la1[18] = jj_gen;
+          jj_consume_token(-1);
+          throw new ParseException();
+        }
+      }
+    } catch (ParseException e) {
+        System.out.println("Failed to parse multiplicativeExpression");
+        e.printStackTrace();
+    }
+      {if (true) return lhs;}
+    throw new Error("Missing return statement in function");
+  }
+
+//  Parse an primary
 //  expression ::= IDENTIFIER LPAREN [expression {COMMA expression}] RPAREN
 //               | IDENTIFIER
 //               | literal
-  static final public Node expression() throws ParseException {
+  static final public Node primary() throws ParseException {
     Node expr = null; String id = null; ArrayList<String> args = null;
     try {
       if (jj_2_3(2147483647)) {
@@ -291,16 +563,16 @@ public class Parser implements ParserConstants {
         case INT_LITERAL:
         case STRING_LITERAL:
           expression();
-                                   args.add(token.image);
-          label_4:
+                           args.add(token.image);
+          label_9:
           while (true) {
             switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
             case COMMA:
               ;
               break;
             default:
-              jj_la1[8] = jj_gen;
-              break label_4;
+              jj_la1[19] = jj_gen;
+              break label_9;
             }
             jj_consume_token(COMMA);
             expression();
@@ -308,7 +580,7 @@ public class Parser implements ParserConstants {
           }
           break;
         default:
-          jj_la1[9] = jj_gen;
+          jj_la1[20] = jj_gen;
           ;
         }
         jj_consume_token(RPAREN);
@@ -324,7 +596,7 @@ public class Parser implements ParserConstants {
           expr = literal();
           break;
         default:
-          jj_la1[10] = jj_gen;
+          jj_la1[21] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
@@ -339,7 +611,7 @@ public class Parser implements ParserConstants {
 
 // Parse a literal
 //     literal ::= INT_LITERAL
-//                 | STRING_LITERAL
+//               | STRING_LITERAL
   static final public Node literal() throws ParseException {
                  Node expr = null;
     try {
@@ -353,7 +625,7 @@ public class Parser implements ParserConstants {
           expr = new StringLiteral(token.image);
         break;
       default:
-        jj_la1[11] = jj_gen;
+        jj_la1[22] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -386,6 +658,11 @@ public class Parser implements ParserConstants {
     finally { jj_save(2, xla); }
   }
 
+  static private boolean jj_3_2() {
+    if (jj_scan_token(ELSE)) return true;
+    return false;
+  }
+
   static private boolean jj_3_1() {
     if (jj_scan_token(IDENTIFIER)) return true;
     if (jj_scan_token(ASSIGN)) return true;
@@ -395,11 +672,6 @@ public class Parser implements ParserConstants {
   static private boolean jj_3_3() {
     if (jj_scan_token(IDENTIFIER)) return true;
     if (jj_scan_token(LPAREN)) return true;
-    return false;
-  }
-
-  static private boolean jj_3_2() {
-    if (jj_scan_token(ELSE)) return true;
     return false;
   }
 
@@ -415,13 +687,18 @@ public class Parser implements ParserConstants {
   static private Token jj_scanpos, jj_lastpos;
   static private int jj_la;
   static private int jj_gen;
-  static final private int[] jj_la1 = new int[12];
+  static final private int[] jj_la1 = new int[23];
   static private int[] jj_la1_0;
+  static private int[] jj_la1_1;
   static {
       jj_la1_init_0();
+      jj_la1_init_1();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x100,0x200000,0x800000,0x18811600,0x18811600,0x2000,0x18800000,0x18811600,0x200000,0x18800000,0x18800000,0x18000000,};
+      jj_la1_0 = new int[] {0x100,0x0,0x0,0x10001600,0x10001600,0x2000,0x0,0x10001600,0x2000,0x1000000,0x2000000,0xc000,0xc000,0xf0000,0xf0000,0xc00000,0xc00000,0x300000,0x300000,0x0,0x0,0x0,0x0,};
+   }
+   private static void jj_la1_init_1() {
+      jj_la1_1 = new int[] {0x0,0x2,0x8,0x188,0x188,0x0,0x188,0x188,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x2,0x188,0x188,0x180,};
    }
   static final private JJCalls[] jj_2_rtns = new JJCalls[3];
   static private boolean jj_rescan = false;
@@ -445,7 +722,7 @@ public class Parser implements ParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 12; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 23; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -460,7 +737,7 @@ public class Parser implements ParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 12; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 23; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -478,7 +755,7 @@ public class Parser implements ParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 12; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 23; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -489,7 +766,7 @@ public class Parser implements ParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 12; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 23; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -506,7 +783,7 @@ public class Parser implements ParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 12; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 23; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -516,7 +793,7 @@ public class Parser implements ParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 12; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 23; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -628,21 +905,24 @@ public class Parser implements ParserConstants {
   /** Generate ParseException. */
   static public ParseException generateParseException() {
     jj_expentries.clear();
-    boolean[] la1tokens = new boolean[30];
+    boolean[] la1tokens = new boolean[43];
     if (jj_kind >= 0) {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
     }
-    for (int i = 0; i < 12; i++) {
+    for (int i = 0; i < 23; i++) {
       if (jj_la1[i] == jj_gen) {
         for (int j = 0; j < 32; j++) {
           if ((jj_la1_0[i] & (1<<j)) != 0) {
             la1tokens[j] = true;
           }
+          if ((jj_la1_1[i] & (1<<j)) != 0) {
+            la1tokens[32+j] = true;
+          }
         }
       }
     }
-    for (int i = 0; i < 30; i++) {
+    for (int i = 0; i < 43; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;
@@ -704,157 +984,4 @@ public class Parser implements ParserConstants {
     JJCalls next;
   }
 
-}
-
-abstract class Node {
-    public abstract String toString();
-}
-
-class Program extends Node {
-    String val = "Program";
-    ArrayList<Function> functions;
-    Program(ArrayList<Function> fcts) {
-        functions = fcts;
-    }
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(val + "\u005cn");
-        for (Function f : functions) {
-            sb.append(f.toString() + "\u005cn");
-        }
-        return sb.toString();
-    }
-}
-
-class Function extends Node {
-    String name;
-    ArrayList<String> args;
-    Block body;
-    Function(String n, ArrayList<String> a, Block b) {
-        name = n;
-        args = a;
-        body = b;
-    }
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Function -> " + name + "(");
-        for (String arg : args) {
-            sb.append(arg+", ");
-        }
-        sb.append(") {");
-        sb.append("\u005cn\u005ct");
-        sb.append(body.toString());
-        sb.append("}");
-        return sb.toString();
-    }
-}
-
-class Block extends Node {
-    ArrayList<Node> statements;
-    Block(ArrayList<Node> stmts) {
-        statements = stmts;
-    }
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        for (Node st : statements) {
-            sb.append(st.toString());
-        }
-        return sb.toString();
-    }
-}
-
-class Variable extends Node {
-    String name;
-    String value;
-    Variable(String n, String v) {
-        name = n;
-        value = v;
-    }
-    public String toString() { return "Variable -> " + name + " = " + value + "\u005cn"; }
-}
-
-class Statement extends Node {
-    String stmt;
-    Statement(String s) {
-        stmt = s;
-    }
-    public String toString() { return stmt; }
-}
-
-class FunctionCall extends Node {
-    String name;
-    ArrayList<String> args;
-    FunctionCall(String n, ArrayList<String> a) {
-        name = n;
-        args = a;
-    }
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("FunctionCall -> " + name + "(");
-        for (String arg : args) {
-            sb.append(arg+", ");
-        }
-        sb.append(")");
-        sb.append("\u005cn");
-        return sb.toString();
-    }
-}
-
-class Expression extends Node {
-    String val;
-    Expression(String s) {
-        val = s;
-    }
-    public String toString() { return val; }
-}
-
-class Return extends Node {
-    Node val;
-    Return(Node s) {
-        val = s;
-    }
-    public String toString() { return "Return -> " + val.toString(); }
-}
-
-class If extends Node {
-    Node cond;
-    Node body;
-    Node elif;
-    If(Node c, Node b, Node e) {
-        cond = c;
-        body = b;
-        elif = e;
-    }
-    public String toString() {
-        return "If -> \u005cnif (" + cond.toString() + ") {\u005cn\u005ct" + body.toString() + "\u005cn}" +
-        (elif != null ? " else {\u005cn\u005ct" + elif.toString() + "\u005cn}" : "\u005cn");
-    }
-}
-
-class While extends Node {
-    Node cond;
-    Node body;
-    While(Node c, Node b) {
-        cond = c;
-        body = b;
-    }
-    public String toString() {
-        return "While -> (" + cond.toString() + ") {\u005cn\u005ct" + body.toString() + "\u005cn}";
-    }
-}
-
-class NumberLiteral extends Node {
-    String val;
-    NumberLiteral(String s) {
-        val = s;
-    }
-    public String toString() { return val; }
-}
-
-class StringLiteral extends Node {
-    String val;
-    StringLiteral(String s) {
-        val = s;
-    }
-    public String toString() { return val; }
 }
