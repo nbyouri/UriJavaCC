@@ -24,6 +24,7 @@ public class Parser {
                                  });
                                 Arrays.sort(files);
                                  for (File f : files) {
+//                                    File f = new File("tests/Object.sl");
                                      try {
                                          System.out.println("=====\n= Parsing file " + f.getPath() + "=\n=====");
                                          Program p = new Parser(new java.io.FileInputStream(f.getPath())).translationUnit();
@@ -151,22 +152,40 @@ Program translationUnit(): {ArrayList<Function> functions; Function aFunction;}
     { return new Program(functions); }
 }
 
+
+// Parse a qualified identifier.
+//   qualifiedIdentifier ::= IDENTIFIER {DOT IDENTIFIER}
+Node qualifiedIdentifier(): {
+    String qualifiedIdentifier = "";
+}
+{
+    try {
+        <IDENTIFIER>
+        {
+            qualifiedIdentifier = token.image;
+        }
+        (
+            <DOT> <IDENTIFIER>
+            { qualifiedIdentifier += "." + token.image; }
+        )*
+    }
+    catch ( ParseException e ) {
+        System.out.println("Failed to parse qualifiedIdentifier");
+        e.printStackTrace();
+    }
+    { return new QualifiedIdentifier(qualifiedIdentifier); }
+}
+
+
 // Parse a function
 //      Function ::= FUNCTION IDENTIFIER LPAREN [IDENTIFIER {COMMA IDENTIFIER}] RPAREN Block
-Function function(): {String name; ArrayList<String> args;}
+Function function(): {String name; ArrayList<Node> args;}
 {
-    { args = new ArrayList<String>(); name = ""; }
+    { args = new ArrayList<Node>(); name = ""; }
     try {
             <FUNCTION>
             <IDENTIFIER>    { name = token.image; }
-            <LPAREN>
-            [
-                <IDENTIFIER> { args.add(token.image); }
-                (
-                    <COMMA> <IDENTIFIER> { args.add(token.image); }
-                )*
-            ]
-            <RPAREN>
+            args = arguments()
     } catch (ParseException e) {
         System.out.println("Failed to parse Function");
         e.printStackTrace();
@@ -227,6 +246,31 @@ Variable variableDeclarator(): {Node expr = null; int line = 0; String name = ""
         e.printStackTrace();
     }
     { return new Variable(name, value); }
+}
+
+// Parse arguments.
+//      arguments ::= LPAREN [expression {COMMA expression}] RPAREN
+ArrayList<Node> arguments(): {
+    ArrayList<Node> args = new ArrayList<Node>();
+    Node anExpression = null;
+}
+{
+    try {
+        <LPAREN>
+        [
+            anExpression = expression() { args.add( anExpression ); }
+            (
+                <COMMA> anExpression = expression()
+                { args.add( anExpression ); }
+            )*
+        ]
+        <RPAREN>
+    }
+    catch ( ParseException e ) {
+        System.out.println("Failed to parse arguments");
+        e.printStackTrace();
+    }
+    { return args; }
 }
 
 // Parse a parenthesized expression.
@@ -487,26 +531,43 @@ Node multiplicativeExpression(): {
 
 
 //  Parse an primary
-//  expression ::= IDENTIFIER LPAREN [expression {COMMA expression}] RPAREN
+//  primary ::= parExpression
+//               | IDENTIFIER [arguments]
 //               | IDENTIFIER
 //               | literal
+//               | qualifiedIdentifier // arguments?
+//               | primary [DOT primary]
 Node primary(): {
-    Node expr = null; String id = null; ArrayList<String> args = null;
+    Node expr = null; String id = null; ArrayList<Node> args = null;
+    ArrayList<Node> nest = null; Node node = null;
 }
 {
     try {
-        LOOKAHEAD( <IDENTIFIER> <LPAREN> )
-        <IDENTIFIER> { id = token.image; args = new ArrayList<String>(); }
-        <LPAREN>
-        [
-            expression() { args.add(token.image); }
-            (
-                <COMMA> expression() { args.add(token.image); }
-            )*
-        ]
-        <RPAREN> { expr = new FunctionCall(id, args); }
+        expr = parExpression()
+
+        | LOOKAHEAD( <IDENTIFIER> <DOT> )
+        expr = qualifiedIdentifier()
+
+        | LOOKAHEAD( <IDENTIFIER> <LPAREN> )
+        <IDENTIFIER> { id = token.image; args = new ArrayList<Node>(); }
+        args = arguments()
+        { expr = new FunctionCall(id, args); }
+
         | <IDENTIFIER> { expr = new Expression(token.image); }
+
         | expr = literal()
+
+//        |
+//        expr = qualifiedIdentifier() { nest = new ArrayList<Node>(); nest.add(expr); }
+//        [
+//            <DOT> node = primary()
+//            { nest.add(node); }
+//            (
+//                <DOT> node = primary()
+//                { nest.add(node); }
+//            )*
+//        ]
+//        { expr = new Nest(nest); }
     } catch ( ParseException e ) {
         System.out.println("Failed to parse an expression");
         e.printStackTrace();

@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Arrays;
 
 abstract class Node {
     public abstract String toString();
@@ -24,10 +25,10 @@ class Program extends Node {
 
 class Function extends Node {
     String name;
-    ArrayList<String> args;
+    ArrayList<Node> args;
     Block body;
 
-    Function(String n, ArrayList<String> a, Block b) {
+    Function(String n, ArrayList<Node> a, Block b) {
         name = n;
         args = a;
         body = b;
@@ -36,7 +37,7 @@ class Function extends Node {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Function -> " + name + "(");
-        for (String arg : args) {
+        for (Node arg : args) {
             sb.append(arg + ", ");
         }
         sb.append(") {");
@@ -77,10 +78,10 @@ class Variable extends Node {
     }
 }
 
-class Statement extends Node {
+class QualifiedIdentifier extends Node {
     String stmt;
 
-    Statement(String s) {
+    QualifiedIdentifier(String s) {
         stmt = s;
     }
 
@@ -91,9 +92,9 @@ class Statement extends Node {
 
 class FunctionCall extends Node {
     String name;
-    ArrayList<String> args;
+    ArrayList<Node> args;
 
-    FunctionCall(String n, ArrayList<String> a) {
+    FunctionCall(String n, ArrayList<Node> a) {
         name = n;
         args = a;
     }
@@ -101,7 +102,7 @@ class FunctionCall extends Node {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("FunctionCall -> " + name + "(");
-        for (String arg : args) {
+        for (Node arg : args) {
             sb.append(arg + ", ");
         }
         sb.append(")");
@@ -206,6 +207,21 @@ class BinaryExpression extends Node {
                 "lhs='" + lhs.toString() + '\'' +
                 ", rhs='" + rhs.toString() + '\'' +
                 ", op='" + op + '\'' +
+                '}';
+    }
+}
+
+class Nest extends  Node {
+    ArrayList<Node> nest;
+
+    Nest(ArrayList<Node> nest) {
+        this.nest = nest;
+    }
+
+    @Override
+    public String toString() {
+        return "Nest{" +
+                "nest=" + nest +
                 '}';
     }
 }
