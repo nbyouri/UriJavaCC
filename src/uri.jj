@@ -1,0 +1,469 @@
+/* Parser for the uri language */
+
+
+PARSER_BEGIN(Parser)
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.io.File;
+import java.util.HashMap;
+
+public class Parser {
+    public static void main(String[] args) {
+        try {
+            Program result = new Parser(new java.io.FileInputStream(args[0])).translationUnit();
+            System.out.println(result.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+abstract class Node {
+    public abstract String toString();
+}
+
+class Program extends Node {
+    String val = "Program";
+    ArrayList<Function> functions;
+    Program(ArrayList<Function> fcts) {
+        functions = fcts;
+    }
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(val + "\n");
+        for (Function f : functions) {
+            sb.append(f.toString() + "\n");
+        }
+        return sb.toString();
+    }
+}
+
+class Function extends Node {
+    String name;
+    ArrayList<String> args;
+    Block body;
+    Function(String n, ArrayList<String> a, Block b) {
+        name = n;
+        args = a;
+        body = b;
+    }
+    public String toString() { 
+        StringBuilder sb = new StringBuilder();
+        sb.append("Function -> " + name + "(");
+        for (String arg : args) {
+            sb.append(arg+", ");
+        }
+        sb.append(") {");
+        sb.append("\n\t");
+        sb.append(body.toString());
+        sb.append("}");
+        return sb.toString();
+    }
+}
+
+class Block extends Node {
+    ArrayList<Node> statements;
+    Block(ArrayList<Node> stmts) {
+        statements = stmts;
+    }
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (Node st : statements) {
+            sb.append(st.toString());
+        }
+        return sb.toString();
+    }
+}
+
+class Variable extends Node {
+    String name;
+    String value;
+    Variable(String n, String v) {
+        name = n;
+        value = v;
+    }
+    public String toString() { return "Variable -> " + name + " = " + value + "\n"; }
+}
+
+class Statement extends Node {
+    String stmt;
+    Statement(String s) {
+        stmt = s;
+    }
+    public String toString() { return stmt; }
+}
+
+class FunctionCall extends Node {
+    String name;
+    ArrayList<String> args;
+    FunctionCall(String n, ArrayList<String> a) {
+        name = n;
+        args = a;
+    }
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("FunctionCall -> " + name + "(");
+        for (String arg : args) {
+            sb.append(arg+", ");
+        }
+        sb.append(")");
+        sb.append("\n");
+        return sb.toString();
+    }
+}
+
+class Expression extends Node {
+    String val;
+    Expression(String s) {
+        val = s;
+    }
+    public String toString() { return val; }
+}
+
+class Return extends Node {
+    Node val;
+    Return(Node s) {
+        val = s;
+    }
+    public String toString() { return "Return -> " + val.toString(); }
+}
+
+class If extends Node {
+    Node cond;
+    Node body;
+    Node elif;
+    If(Node c, Node b, Node e) {
+        cond = c;
+        body = b;
+        elif = e;
+    }
+    public String toString() {
+        return "If -> \nif (" + cond.toString() + ") {\n\t" + body.toString() + "\n}" +
+        (elif != null ? " else {\n\t" + elif.toString() + "\n}" : "\n");
+    }
+}
+
+class While extends Node {
+    Node cond;
+    Node body;
+    While(Node c, Node b) {
+        cond = c;
+        body = b;
+    }
+    public String toString() {
+        return "While -> (" + cond.toString() + ") {\n\t" + body.toString() + "\n}";
+    }
+}
+
+class NumberLiteral extends Node {
+    String val;
+    NumberLiteral(String s) {
+        val = s;
+    }
+    public String toString() { return val; }
+}
+
+class StringLiteral extends Node {
+    String val;
+    StringLiteral(String s) {
+        val = s;
+    }
+    public String toString() { return val; }
+}
+
+
+PARSER_END(Parser)
+
+
+/////////////////////////////////////////////////////////
+//         The uri lexical grammar starts here         //
+/////////////////////////////////////////////////////////
+
+
+// Whitespace -- ignored
+SKIP: {" "|"\t"|"\n"|"\r"|"\f"}
+
+// Single or multi-line comment -- ignored
+SKIP: {
+      <SINGLE_LINE_COMMENT: "//" (~["\n","\r"])* ("\n"|"\r"|"\r\n")>
+    | <MULTI_LINE_COMMENT: "/*" (~["*"])* "*" ("*" | ~["*","/"] (~["*"])* "*")* "/">
+}
+
+// Reserved words
+TOKEN:
+{
+  < FUNCTION: "function" >
+| < RETURN: "return" >
+| < IF: "if" >
+| < ELSE: "else" >
+| < WHILE: "while" >
+}
+
+// Operators (these could be combined with the reserved words)
+TOKEN:
+{
+  < ASSIGN: "=" >
+}
+
+
+// Separators (these could be combined with the reserved words)
+TOKEN:
+{
+  < LPAREN: "(" >
+| < RPAREN: ")" >
+| < LCURLY: "{" >
+| < RCURLY: "}" >
+| < LBRACK: "[" >
+| < RBRACK: "]" >
+| < SEMI: ";" >
+| < COMMA: "," >
+| < DOT: "." >
+}
+
+
+
+// Identifiers
+TOKEN:
+{
+  < IDENTIFIER: (<LETTER>|"_"|"$") (<LETTER>|<DIGIT>|"_"|"$")* >
+| < #LETTER: ["a"-"z","A"-"Z"] >
+| < #DIGIT: ["0"-"9"] >
+| < #NON_ZERO_DIGIT: ["1"-"9"] >
+}
+
+
+// Literals
+TOKEN:
+{
+  < INT_LITERAL: ("0" | <NON_ZERO_DIGIT> (<DIGIT>)*) >
+//| < DOUBLE_LITERAL: (<DIGIT>)* ((<DOT>){1} (((<DIGIT>)+ (["e","E"])?) (["+","-"])? (<DIGIT>)+ | (<DIGIT>)+) (["d","D"])?)? >
+//| < CHAR_LITERAL: "'" (<ESC> | ~["'","\\","\n","\r"]) "'" >
+| < STRING_LITERAL: "\"" (<ESC> | ~["\"","\\","\n","\r"])* "\"" >
+| < #ESC: "\\" ["n","t","b","r","f","\\","'","\""] >
+}
+
+// For anything else, we return an ERROR token. Without this
+// definition the TokenManager will throw an Error when a lexical
+// error occurs, making it impossible to recover from it. So we
+// define this ERROR token.
+//TOKEN:
+//{
+// < ERROR: ~[] >
+//}
+
+/////////////////////////////////////////////////////////
+//       The uri syntactic grammar starts here         //
+/////////////////////////////////////////////////////////
+
+
+// Parse a compilation unit
+//       translationUnit ::= {function}
+Program translationUnit(): {ArrayList<Function> functions; Function aFunction;}
+{
+    { functions = new ArrayList<Function>(); }
+    try {
+        (
+            aFunction = function()
+            { functions.add(aFunction); }
+        )*
+        <EOF>
+    } catch (ParseException e) {
+        System.out.println("Failed to parse translationUnit");
+        e.printStackTrace();
+    }
+    { return new Program(functions); }
+}
+
+// Parse a function
+//      Function ::= FUNCTION IDENTIFIER LPAREN [IDENTIFIER {COMMA IDENTIFIER}] RPAREN Block
+Function function(): {String name; ArrayList<String> args;}
+{
+    { args = new ArrayList<String>(); name = ""; }
+    try {
+            <FUNCTION>
+            <IDENTIFIER>    { name = token.image; }
+            <LPAREN>
+            [
+                <IDENTIFIER> { args.add(token.image); }
+                (
+                    <COMMA> <IDENTIFIER> { args.add(token.image); }
+                )*
+            ]
+            <RPAREN>
+    } catch (ParseException e) {
+        System.out.println("Failed to parse Function");
+        e.printStackTrace();
+    }
+    { return new Function(name, args, block()); }
+}
+
+
+// Parse a block
+//      Block ::= LCURLY {blockStatement} RCURLY
+Block block(): {ArrayList<Node> statements; Node aStatement;}
+{
+    { statements = new ArrayList<Node>(); }
+    try {
+        <LCURLY>
+        (
+            aStatement = blockStatement()
+            { statements.add( aStatement ); }
+        )*
+        <RCURLY>
+    } catch (ParseException e) {
+        System.out.println("Failed to parse block");
+        e.printStackTrace();
+    }
+    { return new Block(statements); }
+}
+
+// Parse a  blockStatement
+//      blockStatement ::= variableDeclarator | statement
+Node blockStatement(): {
+    Node statement = null;
+}
+{
+    try {
+        LOOKAHEAD ( <IDENTIFIER> <ASSIGN> )
+        statement = variableDeclarator()
+        | statement =  statement()
+    }
+    catch ( ParseException e ) {
+        System.out.println("Failed to parse blockStatement");
+        e.printStackTrace();
+    }
+    { return statement; }
+}
+
+// Parse a variableDeclarator
+//      variableDeclarator ::= IDENTIFIER [ASSIGN expression] SEMI
+Variable variableDeclarator(): {Node expr = null; int line = 0; String name = ""; String value = ""; }
+{
+    try {
+         <IDENTIFIER> { line = token.beginLine; name = token.image; }
+         [
+            <ASSIGN> expr = expression() { value = expr.toString(); }
+         ]
+         <SEMI>
+    } catch ( ParseException e ) {
+        System.out.println("Failed to parse variableDeclarator for variable " + name);
+        e.printStackTrace();
+    }
+    { return new Variable(name, value); }
+}
+
+/**
+ * Parse a parenthesized expression.
+ *
+ *   parExpression ::= LPAREN expression RPAREN
+ */
+
+private Node parExpression(): {
+    Node expr = null;
+
+}
+{
+    try {
+        <LPAREN> expr = expression() <RPAREN>
+    }
+    catch ( ParseException e ) {
+        System.out.println("Failed to parse parExpression");
+        e.printStackTrace();
+    }
+    { return expr; }
+}
+
+
+// Parse a statement
+//     statement ::= block
+//                | IF parExpression statement [ELSE statement]
+//                | WHILE parExpression statement
+//                | RETURN [expression] SEMI
+//                | SEMI
+//                | expression SEMI // TODO validate side effects
+Node statement(): {
+    Node stmt = null;
+    Node expr = null;
+    Node cond = null;
+    Node body = null;
+    Node ifel = null;
+}
+{
+    try {
+        stmt = block()
+
+        | <IF> { cond = parExpression(); body = statement();}
+        [ LOOKAHEAD( <ELSE> )
+            <ELSE> ifel = statement()
+        ]
+        { stmt = new If(cond, body, ifel); }
+
+        | <WHILE>
+            cond = parExpression()
+            body = statement()
+        { stmt = new While(cond, body); }
+
+        | <RETURN>
+        [
+            expr = expression()
+        ]
+        <SEMI>
+        { stmt = new Return(expr); }
+
+        | stmt = expression()
+        <SEMI>
+    } catch (ParseException e) {
+        System.out.println("Failed to parse statement");
+        e.printStackTrace();
+    }
+    { return stmt; }
+}
+
+
+// Parse an expression
+//  expression ::= IDENTIFIER LPAREN [expression {COMMA expression}] RPAREN
+//               | IDENTIFIER
+//               | literal
+Node expression(): {
+    Node expr = null; String id = null; ArrayList<String> args = null;
+}
+{
+    try {
+        LOOKAHEAD( <IDENTIFIER> <LPAREN> )
+        <IDENTIFIER> { id = token.image; args = new ArrayList<String>(); }
+        <LPAREN>
+        [
+            expression()         { args.add(token.image); }
+            (
+                <COMMA> expression() { args.add(token.image); }
+            )*
+        ]
+        <RPAREN> { expr = new FunctionCall(id, args); }
+        | <IDENTIFIER> { expr = new Expression(token.image); }
+        | expr = literal()
+    } catch ( ParseException e ) {
+        System.out.println("Failed to parse an expression");
+        e.printStackTrace();
+    }
+    { return expr; }
+}
+
+
+// Parse a literal
+//     literal ::= INT_LITERAL
+//                 | STRING_LITERAL
+Node literal(): {Node expr = null;}
+{
+    try {
+        <INT_LITERAL>
+        { expr = new NumberLiteral(token.image); }
+        | <STRING_LITERAL>
+        { expr = new StringLiteral(token.image); }
+    } catch (ParseException e) {
+        System.out.println("Failed to parse literal");
+        e.printStackTrace();
+    }
+    { return expr; }
+}
