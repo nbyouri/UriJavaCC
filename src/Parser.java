@@ -618,7 +618,7 @@ public class Parser implements ParserConstants {
 //               | literal
 //               | qualifiedIdentifier // arguments?
   final public Node primary() throws ParseException {
-    String id = null; ArrayList<Node> args = null, fields = null;
+    String id = null; ArrayList<Node> args = null;
     Node expr = null, node = null;
     try {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {

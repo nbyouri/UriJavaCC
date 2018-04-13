@@ -537,7 +537,7 @@ Node multiplicativeExpression(): {
 //               | literal
 //               | qualifiedIdentifier // arguments?
 Node primary(): {
-    String id = null; ArrayList<Node> args = null, fields = null;
+    String id = null; ArrayList<Node> args = null;
     Node expr = null, node = null;
 }
 {
