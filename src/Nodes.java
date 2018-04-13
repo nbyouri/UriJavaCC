@@ -99,15 +99,12 @@ class FunctionCall extends Node {
         args = a;
     }
 
+    @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("FunctionCall -> " + name + "(");
-        for (Node arg : args) {
-            sb.append(arg + ", ");
-        }
-        sb.append(")");
-        sb.append("\n");
-        return sb.toString();
+        return "FunctionCall{" +
+                "name='" + name + '\'' +
+                ", args=" + args +
+                "}\n";
     }
 }
 
@@ -207,21 +204,6 @@ class BinaryExpression extends Node {
                 "lhs='" + lhs.toString() + '\'' +
                 ", rhs='" + rhs.toString() + '\'' +
                 ", op='" + op + '\'' +
-                '}';
-    }
-}
-
-class Nest extends  Node {
-    ArrayList<Node> nest;
-
-    Nest(ArrayList<Node> nest) {
-        this.nest = nest;
-    }
-
-    @Override
-    public String toString() {
-        return "Nest{" +
-                "nest=" + nest +
-                '}';
+                "}\n";
     }
 }

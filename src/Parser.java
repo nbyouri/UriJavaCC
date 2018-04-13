@@ -617,10 +617,9 @@ public class Parser implements ParserConstants {
 //               | IDENTIFIER
 //               | literal
 //               | qualifiedIdentifier // arguments?
-//               | primary [DOT primary]
   final public Node primary() throws ParseException {
-    Node expr = null; String id = null; ArrayList<Node> args = null;
-    ArrayList<Node> nest = null; Node node = null;
+    String id = null; ArrayList<Node> args = null, fields = null;
+    Node expr = null, node = null;
     try {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case LPAREN:
@@ -716,6 +715,12 @@ public class Parser implements ParserConstants {
     finally { jj_save(3, xla); }
   }
 
+  private boolean jj_3_4() {
+    if (jj_scan_token(IDENTIFIER)) return true;
+    if (jj_scan_token(LPAREN)) return true;
+    return false;
+  }
+
   private boolean jj_3_3() {
     if (jj_scan_token(IDENTIFIER)) return true;
     if (jj_scan_token(DOT)) return true;
@@ -730,12 +735,6 @@ public class Parser implements ParserConstants {
   private boolean jj_3_1() {
     if (jj_scan_token(IDENTIFIER)) return true;
     if (jj_scan_token(ASSIGN)) return true;
-    return false;
-  }
-
-  private boolean jj_3_4() {
-    if (jj_scan_token(IDENTIFIER)) return true;
-    if (jj_scan_token(LPAREN)) return true;
     return false;
   }
 
